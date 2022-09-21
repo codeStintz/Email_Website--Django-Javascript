@@ -96,18 +96,15 @@ def mailbox(request, mailbox):
 @login_required
 def email(request, email_id):
 
-    # Query for requested email
-    # try:
-    #     email = Email.objects.get(user=request.user, pk=email_id)
-    # except Email.DoesNotExist:
-    #     return JsonResponse({"error": "Email not found."}, status=404)
-
     email = Email.objects.get(user=request.user, pk=email_id)
     
     # Return email contents
     if request.method == "GET":
         return JsonResponse(email.serialize())
 
+
+    # ** Re-wrote this in static/mail/inbox.js (in javascript instead) **
+    
     # Update whether email is read or should be archived
     # elif request.method == "PUT":
     #     data = json.loads(request.body)
