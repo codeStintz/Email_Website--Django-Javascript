@@ -77,13 +77,13 @@ def mailbox(request, mailbox):
 
     # Filter emails returned based on mailbox
     if mailbox == "inbox":
-        emails = Email.objects.all()
+        emails = Email.objects.filter(user = request.user)
 
     elif mailbox == "sent":
-        emails = Email.objects.all()
+        emails = Email.objects.filter(sender = request.user)
 
     elif mailbox == "archive":
-        emails = Email.objects.all()
+        emails = Email.objects.filter(user = request.user)
     else:
         return JsonResponse({"error": "Invalid mailbox."}, status=400)
 
