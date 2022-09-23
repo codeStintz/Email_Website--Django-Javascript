@@ -45,7 +45,7 @@ def compose(request):
             recipients.append(user)
         except User.DoesNotExist:
             return JsonResponse({
-                "error": f"User with email {email} does not exist."
+                "error": f"User with email \'{email}\' does not exist."
             }, status=400)
 
     # Get contents of email
@@ -65,11 +65,12 @@ def compose(request):
             read=user == request.user
         )
         email.save()
-        # for recipient in recipients:
-        #     email.recipients.add(recipient)
-        # email.save()
+        for recipient in recipients:
+            email.recipients.add(recipient)
+        email.save()
 
     return JsonResponse({"message": "Email sent successfully."}, status=201)
+
 
 
 @login_required
@@ -77,13 +78,17 @@ def mailbox(request, mailbox):
 
     # Filter emails returned based on mailbox
     if mailbox == "inbox":
-        emails = Email.objects.filter(user = request.user)
-
+        emails = Email.objects.filter(
+            user=request.user, archived=False
+        )
     elif mailbox == "sent":
-        emails = Email.objects.filter(sender = request.user)
-
+        emails = Email.objects.filter(
+            user=request.user, sender=request.user
+        )
     elif mailbox == "archive":
-        emails = Email.objects.filter(user = request.user)
+        emails = Email.objects.filter(
+            user=request.user, archived=True
+        )
     else:
         return JsonResponse({"error": "Invalid mailbox."}, status=400)
 
@@ -97,23 +102,25 @@ def mailbox(request, mailbox):
 def email(request, email_id):
 
     email = Email.objects.get(user=request.user, pk=email_id)
+
+    try:
+        email = Email.objects.get(user=request.user, pk=email_id)
+    except Email.DoesNotExist:
+        return JsonResponse({"error": "Email not found."}, status=404)
     
     # Return email contents
     if request.method == "GET":
         return JsonResponse(email.serialize())
 
-
-    # ** Re-wrote this in static/mail/inbox.js (in javascript instead) **
-    
     # Update whether email is read or should be archived
-    # elif request.method == "PUT":
-    #     data = json.loads(request.body)
-    #     if data.get("read") is not None:
-    #         email.read = data["read"]
-    #     if data.get("archived") is not None:
-    #         email.archived = data["archived"]
-    #     email.save()
-    #     return HttpResponse(status=204)
+    elif request.method == "PUT":
+        data = json.loads(request.body)
+        if data.get("read") is not None:
+            email.read = data["read"]
+        if data.get("archived") is not None:
+            email.archived = data["archived"]
+        email.save()
+        return HttpResponse(status=204)
 
     # Email must be via GET or PUT
     else:

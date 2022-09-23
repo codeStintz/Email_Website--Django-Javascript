@@ -164,27 +164,42 @@ function load_mailbox(mailbox) {
   });
 }
 
-function send_email(){
-
-  
-    const Recipient = document.querySelector("#compose-recipients").value;
-    const Subject = document.querySelector("#compose-subject").value;
-    const Body = document.querySelector("#compose-body").value;
-
-  
-    fetch('/emails', {
-      method: 'POST',
-      body: JSON.stringify({
-        recipients: Recipient,
-        subject: Subject,
-        body: Body
-      })
+function send_email() {
+  const recipients = document.querySelector('#compose-recipients').value;
+  const subject = document.querySelector('#compose-subject').value;
+  const body = document.querySelector('#compose-body').value;
+  console.log(recipients);
+  fetch('/emails', {
+    method: 'POST',
+    body: JSON.stringify({
+      recipients: recipients,
+      subject: subject,
+      body: body
     })
-
+  })
     .then(response => response.json())
-    .then(result => {
-      load_mailbox('sent');
-    });
+      .then(result => {
+        if ("message" in result) {
+            // The email was sent successfully!
+            load_mailbox('sent');
+        }
 
-    return false;
-  }
+        if ("error" in result) {
+            // There was an error in sending the email
+            // Display the error next to the "To:"
+            document.querySelector('#to-text-error-message').innerHTML = result['error']
+
+        }
+        console.log(result);
+        console.log("message" in result);
+        console.log("error" in result);
+      })
+        .catch(error => {
+            // we hope this code is never executed, but who knows?
+            console.log(error);
+        });
+  return false;
+}
+
+
+
